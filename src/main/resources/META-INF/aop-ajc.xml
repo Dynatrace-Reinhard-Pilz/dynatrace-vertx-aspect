@@ -1,0 +1,8 @@
+<aspectj>
+	<aspects>
+		<aspect name="com.dynatrace.vertx.aspects.VertxAspect"/>
+	</aspects>
+	<weaver options="-Xset:weaveJavaxPackages=true">
+		<include within="org.vertx.java..*" />
+	</weaver>
+</aspectj>

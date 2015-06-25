@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jardesc>
+    <jar path="dynatrace-vertx-aspect/dynatrace-vertx-aspects.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/dynatrace-vertx-aspect/dynatrace-vertx-aspect.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="false" exportJavaFiles="false" exportOutputFolder="true">
+        <javaElement handleIdentifier="=dynatrace-vertx-aspect/src\/main\/resources"/>
+        <javaElement handleIdentifier="=dynatrace-vertx-aspect/src\/main\/java"/>
+    </selectedElements>
+</jardesc>
