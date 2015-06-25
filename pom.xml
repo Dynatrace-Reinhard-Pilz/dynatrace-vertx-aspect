@@ -19,7 +19,7 @@
 			<artifactId>dynatrace-adk</artifactId>
 			<version>6.2.0.1147</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/mvn-repo/com/dynatrace/dynatrace-adk/6.2.0.1147/dynatrace-adk-6.2.0.1147.jar</systemPath>
+			<systemPath>${project.basedir}/lib/dynatrace-adk-6.2.0.1147.jar</systemPath>
 		</dependency>
 	</dependencies>
 	<build>
