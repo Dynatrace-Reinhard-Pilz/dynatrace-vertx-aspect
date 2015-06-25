@@ -9,6 +9,7 @@ Desktop.ini
 $RECYCLE.BIN/
 target/
 
+
 # Windows Installer files
 *.cab
 *.msi
