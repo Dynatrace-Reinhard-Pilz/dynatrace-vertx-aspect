@@ -1,0 +1,2 @@
+eclipse.preferences.version=1
+org.eclipse.ajdt.aopxml=/dynatrace-vertx-aspect/src/main/resources/META-INF/aop-ajc.xml
