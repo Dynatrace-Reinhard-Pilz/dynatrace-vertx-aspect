@@ -16,3 +16,5 @@ set JVM_OPTS=-javaagent:%ASPECTJ_HOME%\lib\aspectjweaver.jar -agentpath:"%DT_HOM
 ```
 
 With this aspect injected the dynaTrace Servlet Sensor will pick up HTTP Requests sent to a Vert.x JVM. Furthermore the most common use cases for asynchronous request handling should be covered.
+
+The current implementation is compatible with Vert.x 2.5.1.
