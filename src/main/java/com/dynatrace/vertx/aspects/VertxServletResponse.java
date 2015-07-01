@@ -9,15 +9,22 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
-import org.vertx.java.core.http.impl.DefaultHttpServerResponse;
-
+/**
+ * A mockup implementation of {@link HttpServletResponse} which literally does
+ * nothing.
+ * 
+ * @author reinhard.pilz@dynatrace.com
+ *
+ */
 public final class VertxServletResponse implements HttpServletResponse {
-
-	@SuppressWarnings("unused")
-	private final DefaultHttpServerResponse response;
 	
-	public VertxServletResponse(DefaultHttpServerResponse response) {
-		this.response = response;
+	/**
+	 * The only required instance of this object
+	 */
+	public static final HttpServletResponse INSTANCE =
+			new VertxServletResponse();
+
+	private VertxServletResponse() {
 	}
 	
 	@Override
