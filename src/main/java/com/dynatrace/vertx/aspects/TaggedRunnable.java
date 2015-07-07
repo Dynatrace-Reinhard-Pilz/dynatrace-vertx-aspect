@@ -42,6 +42,7 @@ public class TaggedRunnable implements Runnable, Taggable {
 	 * @param handler the {@link Runnable} to wrap
 	 */
 	public TaggedRunnable(Runnable runnable) {
+//		Thread.dumpStack();
 		this.runnable = runnable;
 	}
 
@@ -61,11 +62,17 @@ public class TaggedRunnable implements Runnable, Taggable {
 		Tagging tagging = Utils.initTagging(getVertxTraceTag());
 		
 		if (tagging == null) {
-			runnable.run();
+			Runnable r = getRunnable();
+			if (r != null) {
+				r.run();
+			}
 			return;
 		}
 		tagging.startServerPurePath();
-		runnable.run();
+		Runnable r = getRunnable();
+		if (r != null) {
+			r.run();
+		}
 		tagging.endServerPurePath();
 	}
 	
@@ -73,6 +80,9 @@ public class TaggedRunnable implements Runnable, Taggable {
 	 * @return the {@link Runnable} wrapped by this object
 	 */
 	public Runnable getRunnable() {
+		if (runnable instanceof TaggedRunnable) {
+			return ((TaggedRunnable) runnable).getRunnable();
+		}
 		return runnable;
 	}
 

@@ -1,13 +1,18 @@
 package com.dynatrace.vertx.aspects;
 
+import java.lang.reflect.Field;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.eventbus.impl.BaseMessage;
+import org.vertx.java.core.http.HttpClientResponse;
+import org.vertx.java.core.http.impl.DefaultHttpClient;
+import org.vertx.java.core.http.impl.DefaultHttpClientRequest;
 import org.vertx.java.core.http.impl.DefaultHttpServerRequest;
 import org.vertx.java.core.http.impl.DefaultHttpServerResponse;
+import org.vertx.java.core.impl.DefaultContext;
 import org.vertx.java.core.net.impl.ServerID;
 
 import com.dynatrace.adk.DynaTraceADKFactory;
@@ -26,7 +31,7 @@ import com.dynatrace.adk.Tagging;
  *
  */
 @SuppressWarnings("rawtypes")
-public aspect VertxAspect {
+public privileged aspect VertxAspect {
 	
 	private static final Logger LOGGER =
 			Logger.getLogger(VertxAspect.class.getName());
@@ -78,14 +83,10 @@ public aspect VertxAspect {
 	}
 	
 	void around(Runnable task): execution(void org.vertx.java.core.impl.DefaultContext+.executeOnOrderedWorkerExec(Runnable)) && args(task) {
-		if (task == null) {
-			proceed(task);
-			return;
-		}
 		Tagging tagging = DynaTraceADKFactory.createTagging();
 		String traceTag = tagging.getTagAsString();
 		
-		if ((tagging == null) || !tagging.isTagValid(traceTag)) {
+		if (!canGetTagged(task, tagging, traceTag)) {
 			proceed(task);
 			return;
 		}
@@ -97,14 +98,10 @@ public aspect VertxAspect {
 	}
 
 	void around(Runnable handler): execution(void org.vertx.java.core.impl.DefaultContext+.execute(Runnable)) && args(handler) {
-		if (handler == null) {
-			proceed(handler);
-			return;
-		}
 		Tagging tagging = DynaTraceADKFactory.createTagging();
 		String traceTag = tagging.getTagAsString();
 		
-		if ((tagging == null) || !tagging.isTagValid(traceTag)) {
+		if (!canGetTagged(handler, tagging, traceTag)) {
 			proceed(handler);
 			return;
 		}
@@ -114,6 +111,13 @@ public aspect VertxAspect {
 		wrapper.setVertxTraceTag(traceTag);
 		tagging.linkClientPurePath(true, traceTag);
 		proceed(wrapper);
+	}
+	
+	private static boolean canGetTagged(Runnable runnable) {
+		if (runnable == null) {
+			return true;
+		}
+		return false;
 	}
 	
 	void around(Object event): execution(void Handler+.handle(Object)) && args(event) {
@@ -146,8 +150,8 @@ public aspect VertxAspect {
 		Tagging tagging = DynaTraceADKFactory.createTagging();
 		String traceTag = tagging.getTagAsString();
 		
-		if ((handler == null) || (tagging == null) || !tagging.isTagValid(traceTag)) {
-			proceed(handler);
+		if (!canGetTagged(handler, tagging, traceTag)) {
+			return proceed(handler);
 		}
 		
 		HandlerWrapper wrapper = new HandlerWrapper(handler);
@@ -161,8 +165,8 @@ public aspect VertxAspect {
 		Tagging tagging = DynaTraceADKFactory.createTagging();
 		String traceTag = tagging.getTagAsString();
 		
-		if ((handler == null) || (tagging == null) || !tagging.isTagValid(traceTag)) {
-			proceed(handler);
+		if (!canGetTagged(handler, tagging, traceTag)) {
+			return proceed(handler);
 		}
 		
 		HandlerWrapper wrapper = new HandlerWrapper(handler);
@@ -176,8 +180,8 @@ public aspect VertxAspect {
 		Tagging tagging = DynaTraceADKFactory.createTagging();
 		String traceTag = tagging.getTagAsString();
 		
-		if ((handler == null) || (tagging == null) || !tagging.isTagValid(traceTag)) {
-			proceed(handler);
+		if (!canGetTagged(handler, tagging, traceTag)) {
+			return proceed(handler);
 		}
 		
 		HandlerWrapper wrapper = new HandlerWrapper(handler);
@@ -191,8 +195,8 @@ public aspect VertxAspect {
 		Tagging tagging = DynaTraceADKFactory.createTagging();
 		String traceTag = tagging.getTagAsString();
 		
-		if ((handler == null) || (tagging == null) || !tagging.isTagValid(traceTag)) {
-			proceed(handler);
+		if (!canGetTagged(handler, tagging, traceTag)) {
+			return proceed(handler);
 		}
 		
 		HandlerWrapper wrapper = new HandlerWrapper(handler);
@@ -209,15 +213,25 @@ public aspect VertxAspect {
 		Tagging tagging = DynaTraceADKFactory.createTagging();
 		String traceTag = tagging.getTagAsString();
 		
-		if ((handler == null) || (tagging == null) || !tagging.isTagValid(traceTag)) {
+		if (!canGetTagged(handler, tagging, traceTag)) {
 			proceed(handler);
+			return;
 		}
 		
 		HandlerWrapper wrapper = new HandlerWrapper(handler);
-		LOGGER.log(LEVEL, "---- created wrapper and tagged with " + traceTag);
 		wrapper.setVertxTraceTag(traceTag);
 		proceed(wrapper);
 		tagging.linkClientPurePath(true, traceTag);
+	}
+	
+	private static boolean canGetTagged(Object o, Tagging tagging, String traceTag) {
+		if (o == null) {
+			return false;
+		}
+		if (tagging == null) {
+			return false;
+		}
+		return tagging.isTagValid(traceTag);
 	}
 	
 	
@@ -255,4 +269,38 @@ public aspect VertxAspect {
 		}
 	}
 	
+	after(DefaultHttpClient client, String method, String uri, Handler<HttpClientResponse> respHandler, DefaultContext context) :
+		initialization(org.vertx.java.core.http.impl.DefaultHttpClientRequest.new(DefaultHttpClient, String, String, Handler, DefaultContext)
+	) && args(client, method, uri, respHandler, context) {
+		DefaultHttpClientRequest request = Utils.cast(thisJoinPoint.getTarget());
+		Tagging tagging = DynaTraceADKFactory.createTagging();
+		if (tagging != null) {
+			String traceTag = tagging.getTagAsString();
+			if (tagging.isTagValid(traceTag)) {
+				request.headers().add("X-dynaTrace", traceTag);
+				if (respHandler != null) {
+					HandlerWrapper wrapper = new HandlerWrapper(respHandler);
+					wrapper.setVertxTraceTag(traceTag);
+					try {
+						Field f = DefaultHttpClientRequest.class.getDeclaredField("respHandler");
+						f.setAccessible(true);
+						f.set(request, wrapper);
+						tagging.linkClientPurePath(true, traceTag);
+					} catch (Throwable t) {
+						LOGGER.log(Level.WARNING, "Unable to replace response handler",	t);
+					}
+				}
+			}
+		}
+    }
+	
+	after() : call(void org.vertx.java.core.http.HttpClientRequest.end()) {
+		Tagging tagging = DynaTraceADKFactory.createTagging();
+		if (tagging != null) {
+			String traceTag = tagging.getTagAsString();
+			if (tagging.isTagValid(traceTag)) {
+				tagging.linkClientPurePath(true, traceTag);
+			}
+		}
+	}
 }

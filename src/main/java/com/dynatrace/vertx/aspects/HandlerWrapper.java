@@ -57,13 +57,20 @@ public class HandlerWrapper implements Handler<Object>, Taggable {
 	@Override
 	public void handle(Object event) {
 		LOGGER.log(LEVEL, Utils.toString(handler) + ".handle(" + Utils.toString(event) + ")");
-		handler.handle(event);
+		Handler<Object> h = getHandler();
+		if (h == null) {
+			return;
+		}
+		h.handle(event);
 	}
 	
 	/**
 	 * @return the {@link Handler} wrapped by this object
 	 */
 	public <E> Handler<E> getHandler() {
+		if (handler instanceof HandlerWrapper) {
+			return ((HandlerWrapper) handler).getHandler();
+		}
 		return (Handler<E>) handler;
 	}
 
